@@ -35,7 +35,7 @@ public class TaskController {
 
         taskService.createTask(task);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", String.valueOf(task.getId()));
+        headers.add("Location", "/api/tasks/"+task.getId());
 
         return new ResponseEntity(headers, HttpStatus.CREATED);
 
