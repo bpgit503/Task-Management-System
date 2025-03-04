@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import en_bpdev_Task_Management_System.entity.Task;
 import en_bpdev_Task_Management_System.service.TaskService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -16,11 +17,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(TaskController.class)
@@ -35,8 +38,54 @@ public class TaskControllerTest {
     @MockitoBean
     TaskService taskService;
 
+
     @Test
-    void createNewTask() throws Exception {
+    void testDeleteBeer() throws Exception {
+        Task mockTask = Task.builder()
+                .id(1l)
+                .title("Complete course")
+                .description("Finish spring course")
+                .dueDate(LocalDate.of(2025, 3, 8))
+                .completed(false)
+                .build();
+
+        mockMvc.perform(delete("/api/tasks/" + mockTask.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(mockTask)))
+                .andExpect(status().isNoContent());
+        ArgumentCaptor<Long> longArgumentCaptor = ArgumentCaptor.forClass(Long.class);
+
+
+        verify(taskService).deleteTask(longArgumentCaptor.capture());
+
+        assertThat(mockTask.getId()).isEqualTo(longArgumentCaptor.getValue());
+
+
+    }
+
+    @Test
+    void testUpdateTask() throws Exception {
+        Task mockTask = Task.builder()
+                .id(1l)
+                .title("Complete course")
+                .description("Finish spring course")
+                .dueDate(LocalDate.of(2025, 3, 8))
+                .completed(false)
+                .build();
+
+        mockMvc.perform(put("/api/tasks/" + mockTask.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(mockTask)))
+                .andExpect(status().isNoContent());
+
+        verify(taskService).updateTask(any(Long.class), any(Task.class));
+
+    }
+
+    @Test
+    void testCreateNewTask() throws Exception {
         Task mockTask = Task.builder()
                 .title("Complete course")
                 .description("Finish spring course")
@@ -57,7 +106,7 @@ public class TaskControllerTest {
 
 
     @Test
-    void getTaskById() throws Exception {
+    void testGetTaskById() throws Exception {
         Task mockTask = Task.builder()
                 .id(1l)
                 .title("Complete course")
