@@ -1,5 +1,7 @@
 package en_bpdev_Task_Management_System.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import en_bpdev_Task_Management_System.entity.Task;
 import en_bpdev_Task_Management_System.service.TaskService;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(TaskController.class)
@@ -26,8 +29,32 @@ public class TaskControllerTest {
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
     @MockitoBean
     TaskService taskService;
+
+    @Test
+    void createNewTask() throws Exception {
+        Task mockTask = Task.builder()
+                .title("Complete course")
+                .description("Finish spring course")
+                .dueDate(LocalDate.of(2025, 3, 8))
+                .completed(false)
+                .createAt(LocalDate.of(2025, 4, 8))
+                .build();
+
+        given(taskService.createTask(any(Task.class))).willReturn(mockTask);
+
+        mockMvc.perform(post("/api/tasks")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(mockTask)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"));
+    }
+
 
     @Test
     void getTaskById() throws Exception {
